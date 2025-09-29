@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Mi Chatbot Personal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .bot-avatar {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .bot-status {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .typing-indicator {
+            display: none;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e1e5e9;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-reply {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-reply:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-animation {
+            display: none;
+            padding: 12px 18px;
+        }
+
+        .typing-dots {
+            display: inline-block;
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #999;
+            margin: 0 1px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            body {
+                padding: 0;
+            }
+        }
+
+        /* Scrollbar personalizada */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="bot-avatar">🤖</div>
+            <h2>ChatBot Inteligente</h2>
+            <div class="bot-status">En línea • Siempre listo para ayudar</div>
+            <div class="typing-indicator">Escribiendo...</div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                ¡Hola! 👋 Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input type="text" 
+                       id="chatInput" 
+                       class="chat-input" 
+                       placeholder="Escribe tu mensaje aquí..." 
+                       maxlength="500">
+                <button id="sendButton" class="send-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatBot {
+            constructor() {
+                this.responses = {
+                    saludos: [
+                        "¡Hola! 👋 ¿Cómo estás hoy?",
+                        "¡Hey! Me alegra verte por aquí 😊",
+                        "¡Saludos! ¿En qué puedo ayudarte?",
+                        "¡Hola! Bienvenido/a ¿Cómo te va?",
+                        "¡Hola! ¿Qué tal tu día? 🌟"
+                    ],
+                    despedidas: [
+                        "¡Hasta luego! Que tengas un excelente día 👋",
+                        "¡Nos vemos! Cuídate mucho 😊",
+                        "¡Adiós! Ha sido un placer conversar contigo",
+                        "¡Hasta la próxima! 🙋‍♂️",
+                        "¡Que descanses! Nos vemos pronto 🌙"
+                    ],
+                    como_estas: [
+                        "¡Muy bien, gracias por preguntar! 😊 ¿Y tú cómo estás?",
+                        "¡Genial! Siempre listo para ayudar. ¿Cómo te sientes?",
+                        "¡Excelente! Cada día es una nueva oportunidad. ¿Qué tal tu día?",
+                        "¡Fantástico! Me encanta charlar contigo. ¿Todo bien por tu lado?"
+                    ],
+                    ayuda: [
+                        "¡Por supuesto! 🤝\n\nPuedo ayudarte con:\n• Conversación general\n• Responder preguntas\n• Contar chistes\n• Darte consejos\n• Información básica\n\n¿Qué necesitas?",
+                        "Estoy aquí para ayudarte 💪\nSolo dime qué necesitas y haré mi mejor esfuerzo."
+                    ],
+                    gracias: [
+                        "¡De nada! 😊 Siempre es un placer ayudar",
+                        "¡No hay de qué! Para eso estoy aquí 🤗",
+                        "¡Un placer! Si necesitas algo más, aquí estaré",
+                        "¡Siempre disponible para ti! 🌟"
+                    ],
+                    chistes: [
+                        "¿Por qué los pájaros vuelan hacia el sur en invierno? 🐦\n¡Porque caminar es muy lejos! 😄",
+                        "¿Qué le dice un gusano a otro gusano? 🐛\n¡Vamos a darle la vuelta a la manzana! 🍎",
+                        "¿Cómo se despiden los químicos? 🧪\nÁcido un placer 😂",
+                        "¿Qué hace una abeja en el gimnasio? 🐝\n¡Zum-ba! 💃",
+                        "¿Por qué los peces no tocan piano? 🐟\n¡Porque le tienen miedo al atún! 🎹"
+                    ],
+                    tiempo: [
+                        `Ahora son las ${new Date().toLocaleTimeString()} ⏰`,
+                        `Hoy es ${new Date().toLocaleDateString()} 📅`,
+                        `Es ${new Date().toLocaleDateString('es-ES', {weekday: 'long'})}, ¡buen día para conversar! 😊`
+                    ],
+                    motivacion: [
+                        "¡Tú puedes con todo! 💪 Cada desafío es una oportunidad de crecer",
+                        "Recuerda: el éxito no es el destino, es el viaje 🌟",
+                        "¡Eres más fuerte de lo que crees! 🦁 Sigue adelante",
+                        "Cada día es una nueva oportunidad para brillar ✨",
+                        "¡Confía en ti! Tienes todo lo necesario para triunfar 🎯"
+                    ],
+                    quien_soy: [
+                        "Soy tu asistente virtual 🤖 Creado para conversar y ayudarte",
+                        "¡Soy un chatbot! Mi misión es hacer tu día mejor 😊",
+                        "Soy tu amigo digital 💫 ¿En qué puedo ayudarte?",
+                        "Soy un bot inteligente, aquí para acompañarte 🎭"
+                    ],
+                    funciones: [
+                        "Estas son algunas cosas que puedo hacer:\n\n🔹 Conversar contigo\n🔹 Responder preguntas\n🔹 Contar chistes\n🔹 Darte la hora/fecha\n🔹 Motivarte\n🔹 Ayudarte con dudas\n🔹 Ser tu compañía digital\n\n¡Pregúntame lo que quieras! 😊"
+                    ],
+                    default: [
+                        "Interesante... cuéntame más sobre eso 🤔",
+                        "¿Podrías ser más específico? Me intriga tu pregunta 💭",
+                        "Hmm, esa es una pregunta fascinante 🧠",
+                        "No estoy seguro de esa respuesta, pero me parece muy interesante 🤖",
+                        "¿Podrías reformularlo? Quiero entenderte mejor 😊",
+                        "Dime más detalles, me gusta aprender cosas nuevas 📚"
+                    ],
+                    clima: [
+                        "No tengo acceso a datos meteorológicos en tiempo real, pero espero que tengas un clima agradable ☀️",
+                        "¡Ojalá haga buen tiempo donde estés! 🌤️",
+                        "Sin importar el clima, ¡siempre es un buen día para conversar! 🌈"
+                    ],
+                    matematicas: [
+                        "¡Me gustan las matemáticas! 🧮 Dime qué operación necesitas",
+                        "Puedo ayudarte con cálculos básicos. ¿Qué necesitas calcular? ➕➖✖️➗"
+                    ]
+                };
+
+                this.patterns = {
+                    saludos: /\b(hola|hey|buenas|saludos|qué tal|como estas|buenos días|buenas tardes|buenas noches|hi|hello)\b/i,
+                    despedidas: /\b(adiós|adios|chau|bye|nos vemos|hasta luego|me voy|hasta la vista|chao)\b/i,
+                    como_estas: /\b(cómo estás|como estas|qué tal|que tal|cómo te va|como te va|todo bien)\b/i,
+                    ayuda: /\b(ayuda|help|auxilio|asistencia|apoyo|ayúdame)\b/i,
+                    gracias: /\b(gracias|thanks|thx|agradezco|muchas gracias)\b/i,
+                    chistes: /\b(chiste|broma|gracioso|hazme reír|divertido|bromea|joke)\b/i,
+                    tiempo: /\b(qué hora|que hora|hora|fecha|día|tiempo|calendario)\b/i,
+                    quien_soy: /\b(quién eres|quien eres|qué eres|tu nombre|como te llamas|eres un bot)\b/i,
+                    funciones: /\b(qué puedes hacer|que puedes hacer|funciones|capacidades|para qué sirves)\b/i,
+                    motivacion: /\b(motívame|motivame|inspire|ánimo|animo|motivación|triste|mal|deprimido)\b/i,
+                    clima: /\b(clima|tiempo|lluvia|sol|temperatura|frío|calor|nublado)\b/i,
+                    matematicas: /\b(suma|resta|multiplicación|división|calcular|matemáticas|números)\b/i
+                };
+
+                this.messageCount = 0;
+                this.userName = '';
+                this.conversationHistory = [];
+                
+                this.init();
+            }
+
+            init() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.typingIndicator = document.querySelector('.typing-indicator');
+
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+
+                this.chatInput.addEventListener('input', () => {
+                    this.sendButton.disabled = !this.chatInput.value.trim();
+                });
+
+                // Mensaje de bienvenida después de un momento
+                setTimeout(() => {
+                    this.addBotMessage("¡Hola! 👋 Soy tu chatbot personal. Puedo conversar contigo, contar chistes, motivarte y mucho más. ¿Cómo te llamas?", [
+                        "¡Empecemos a chatear!",
+                        "Cuéntame un chiste",
+                        "¿Qué puedes hacer?"
+                    ]);
+                }, 1000);
+            }
+
+            sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+
+                this.addUserMessage(message);
+                this.chatInput.value = '';
+                this.sendButton.disabled = true;
+                this.messageCount++;
+
+                // Guardar en historial
+                this.conversationHistory.push({
+                    type: 'user',
+                    message: message,
+                    timestamp: new Date()
+                });
+
+                this.showTyping();
+                
+                setTimeout(() => {
+                    this.hideTyping();
+                    this.processMessage(message);
+                }, this.getRandomDelay());
+            }
+
+            processMessage(message) {
+                const lowerMessage = message.toLowerCase();
+                let response = '';
+                let quickReplies = [];
+
+                // Detectar si menciona su nombre
+                if (this.messageCount <= 3 && !this.userName && this.containsName(message)) {
+                    this.userName = this.extractName(message);
+                    response = `¡Encantado de conocerte, ${this.userName}! 😊 Es un placer charlar contigo. ¿En qué puedo ayudarte hoy?`;
+                    quickReplies = ["Cuéntame algo interesante", "Un chiste por favor", "¿Cómo estás?"];
+                }
+                // Detección de patrones
+                else if (this.patterns.saludos.test(lowerMessage)) {
+                    response = this.getRandomResponse('saludos');
+                    if (this.userName) {
+                        response = response.replace('¡Hola!', `¡Hola ${this.userName}!`);
+                    }
+                    quickReplies = ["¿Cómo estás?", "Cuéntame un chiste", "¿Qué tal tu día?"];
+                }
+                else if (this.patterns.despedidas.test(lowerMessage)) {
+                    response = this.getRandomResponse('despedidas');
+                    if (this.userName) {
+                        response += ` ¡Fue genial charlar contigo, ${this.userName}!`;
+                    }
+                }
+                else if (this.patterns.como_estas.test(lowerMessage)) {
+                    response = this.getRandomResponse('como_estas');
+                    quickReplies = ["Yo también bien", "Un poco cansado", "¡Genial!"];
+                }
+                else if (this.patterns.ayuda.test(lowerMessage)) {
+                    response = this.getRandomResponse('ayuda');
+                    quickReplies = ["Contar chiste", "Motivarme", "¿Qué puedes hacer?"];
+                }
+                else if (this.patterns.gracias.test(lowerMessage)) {
+                    response = this.getRandomResponse('gracias');
+                    quickReplies = ["Cuéntame algo más", "Un chiste", "¿Cómo estás?"];
+                }
+                else if (this.patterns.chistes.test(lowerMessage)) {
+                    response = this.getRandomResponse('chistes');
+                    quickReplies = ["Otro chiste", "Muy gracioso 😂", "¿Qué más puedes hacer?"];
+                }
+                else if (this.patterns.tiempo.test(lowerMessage)) {
+                    response = this.getRandomResponse('tiempo');
+                    quickReplies = ["¿Qué día es hoy?", "Cuéntame algo", "Gracias"];
+                }
+                else if (this.patterns.motivacion.test(lowerMessage)) {
+                    response = this.getRandomResponse('motivacion');
+                    quickReplies = ["Gracias, lo necesitaba", "Otro consejo", "¿Cómo estar mejor?"];
+                }
+                else if (this.patterns.quien_soy.test(lowerMessage)) {
+                    response = this.getRandomResponse('quien_soy');
+                    quickReplies = ["¿Qué puedes hacer?", "Interesante", "Cuéntame más"];
+                }
+                else if (this.patterns.funciones.test(lowerMessage)) {
+                    response = this.getRandomResponse('funciones');
+                    quickReplies = ["Contar chiste", "Ayuda", "Motivación"];
+                }
+                else if (this.patterns.clima.test(lowerMessage)) {
+                    response = this.getRandomResponse('clima');
+                    quickReplies = ["Gracias", "¿Qué más sabes?", "Cuéntame algo"];
+                }
+                else if (this.patterns.matematicas.test(lowerMessage)) {
+                    const mathResult = this.processMath(message);
+                    if (mathResult) {
+                        response = `El resultado es: ${mathResult} 🧮`;
+                    } else {
+                        response = this.getRandomResponse('matematicas');
+                    }
+                    quickReplies = ["Otra operación", "Gracias", "¿Qué más puedes hacer?"];
+                }
+                else {
+                    response = this.getRandomResponse('default');
+                    quickReplies = ["Interesante", "Cuéntame un chiste", "¿Cómo estás?"];
+                }
+
+                // Personalizar respuesta si conocemos el nombre
+                if (this.userName && Math.random() < 0.3) {
+                    response += ` 😊`;
+                }
+
+                this.conversationHistory.push({
+                    type: 'bot',
+                    message: response,
+                    timestamp: new Date()
+                });
+
+                this.addBotMessage(response, quickReplies);
+            }
+
+            containsName(message) {
+                const namePatterns = [
+                    /me llamo (\w+)/i,
+                    /mi nombre es (\w+)/i,
+                    /soy (\w+)/i,
+                    /^(\w+)$/
+                ];
+                
+                return namePatterns.some(pattern => pattern.test(message.trim()));
+            }
+
+            extractName(message) {
+                const namePatterns = [
+                    /me llamo (\w+)/i,
+                    /mi nombre es (\w+)/i,
+                    /soy (\w+)/i,
+                    /^(\w+)$/
+                ];
+                
+                for (let pattern of namePatterns) {
+                    const match = message.trim().match(pattern);
+                    if (match) {
+                        return match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+                    }
+                }
+                return '';
+            }
+
+            processMath(message) {
+                try {
+                    // Buscar patrones de matemáticas básicas
+                    const mathMatch = message.match(/(\d+)\s*([+\-*/])\s*(\d+)/);
+                    if (mathMatch) {
+                        const [, num1, operator, num2] = mathMatch;
+                        const a = parseFloat(num1);
+                        const b = parseFloat(num2);
+                        
+                        switch (operator) {
+                            case '+': return a + b;
+                            case '-': return a - b;
+                            case '*': return a * b;
+                            case '/': return b !== 0 ? a / b : 'Error: División por cero';
+                            default: return null;
+                        }
+                    }
+                } catch (e) {
+                    return null;
+                }
+                return null;
+            }
+
+            getRandomResponse(category) {
+                const responses = this.responses[category];
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+
+            getRandomDelay() {
+                return Math.random() * 2000 + 1000; // Entre 1-3 segundos
+            }
+
+            showTyping() {
+                this.typingIndicator.style.display = 'block';
+                
+                const typingMessage = document.createElement('div');
+                typingMessage.className = 'message bot typing-animation';
+                typingMessage.innerHTML = `
+                    <div class="message-bubble">
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                `;
+                
+                this.chatMessages.appendChild(typingMessage);
+                this.scrollToBottom();
+            }
+
+            hideTyping() {
+                this.typingIndicator.style.display = 'none';
+                const typingAnimation = document.querySelector('.typing-animation');
+                if (typingAnimation) {
+                    typingAnimation.remove();
+                }
+            }
+
+            addUserMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message user';
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">${this.escapeHtml(message)}</div>
+                `;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            addBotMessage(message, quickReplies = []) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                
+                let quickRepliesHtml = '';
+                if (quickReplies.length > 0) {
+                    quickRepliesHtml = `
+                        <div class="quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="quick-reply" onclick="chatBot.handleQuickReply('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    `;
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">${this.formatMessage(message)}</div>
+                    ${quickRepliesHtml}
+                `;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            handleQuickReply(reply) {
+                this.chatInput.value = reply;
+                this.sendMessage();
+            }
+
+            formatMessage(message) {
+                return this.escapeHtml(message).replace(/\n/g, '<br>');
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+        }
+
+        // Inicializar el chatbot cuando la página carge
+        let chatBot;
+        document.addEventListener('DOMContentLoaded', () => {
+            chatBot = new ChatBot();
+        });
+
+        // Función para manejar quick replies (necesaria para el onclick)
+        function handleQuickReply(reply) {
+            if (chatBot) {
+                chatBot.handleQuickReply(reply);
+            }
+        }
+    </script>
+</body>
+</html>
